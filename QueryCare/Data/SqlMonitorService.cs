@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Data.SqlClient;
+using QueryCare.Models;
 
-namespace QueryCare.Data
+namespace QueryCare.Data;
+
+    public sealed class SqlMonitorService
 {
-    internal class SqlMonitorService
-    {
-    }
+    
 }
+
