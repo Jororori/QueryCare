@@ -19,9 +19,17 @@ public sealed class LevelBrushConverter : IValueConverter
         var green = (B("#E6F6EF"), B("#178A5E"));
         return new(StringComparer.OrdinalIgnoreCase)
         {
-            ["Crítico"] = red, ["CRÍTICA"] = red, ["Alto"] = red, ["ALTA"] = red, ["Congelado"] = red, ["Error"] = red,
-            ["Medio"] = amber, ["MEDIA"] = amber, ["Lento"] = amber,
-            ["Bajo"] = green, ["Bien"] = green
+            ["Crítico"] = red,
+            ["CRÍTICA"] = red,
+            ["Alto"] = red,
+            ["ALTA"] = red,
+            ["Congelado"] = red,
+            ["Error"] = red,
+            ["Medio"] = amber,
+            ["MEDIA"] = amber,
+            ["Lento"] = amber,
+            ["Bajo"] = green,
+            ["Bien"] = green
         };
     }
 
@@ -52,6 +60,5 @@ public sealed class CountToVisibilityConverter : IValueConverter
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotSupportedException();
-
 }
 
