@@ -31,5 +31,30 @@ public sealed class ConnectionSettings
             ? null
             : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
     }
+    public bool IsSameTarget(ConnectionSettings other) =>
+        string.Equals(Server, other.Server, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(Database, other.Database, StringComparison.OrdinalIgnoreCase);
+
+    public string BuildConnectionString()
+    {
+        var b = new SqlConnectionStringBuilder
+        {
+            DataSource = Server,
+            InitialCatalog = Database,
+            IntegratedSecurity = UseWindowsAuth,
+            TrustServerCertificate = TrustServerCertificate,
+            Encrypt = SqlConnectionEncryptOption.Optional,
+            ApplicationName = "QueryCare (solo lectura)",
+            ApplicationIntent = ApplicationIntent.ReadOnly,
+            ConnectTimeout = 10,
+            Pooling = true
+        };
+        if (!UseWindowsAuth)
+        {
+            b.UserID = User;
+            b.Password = Password;
+        }
+        return b.ConnectionString;
+    }
 }
 
