@@ -22,4 +22,42 @@ public sealed class PieChart : FrameworkElement
     public int Slow { get => (int)GetValue(SlowProperty); set => SetValue(SlowProperty, value); }
     public int Frozen { get => (int)GetValue(FrozenProperty); set => SetValue(FrozenProperty, value); }
 
+    private static DependencyProperty Register(string name) =>
+        DependencyProperty.Register(name, typeof(int), typeof(PieChart),
+            new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    private static Brush Freeze(Color c)
+    {
+        var b = new SolidColorBrush(c);
+        b.Freeze();
+        return b;
+    }
+
+    protected override void OnRender(DrawingContext dc)
+    {
+        double outer = Math.Min(ActualWidth, ActualHeight) / 2;
+        if (outer <= 8) return;
+        var center = new Point(ActualWidth / 2, ActualHeight / 2);
+        double r = outer - 7;
+
+        dc.DrawEllipse(Brushes.White, HaloPen, center, outer, outer);
+
+        int total = Good + Slow + Frozen;
+        if (total == 0)
+        {
+            dc.DrawEllipse(EmptyBrush, null, center, r, r);
+            return;
+        }
+
+        double start = -90;
+        foreach (var (value, brush) in new[] { (Frozen, FrozenBrush), (Slow, SlowBrush), (Good, GoodBrush) })
+        {
+            if (value == 0) continue;
+            double sweep = 360.0 * value / total;
+            if (sweep >= 359.99) dc.DrawEllipse(brush, null, center, r, r);
+            else dc.DrawGeometry(brush, null, Slice(center, r, start, sweep));
+            start += sweep;
+        }
+    }
+
 }
