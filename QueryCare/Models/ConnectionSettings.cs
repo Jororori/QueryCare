@@ -58,3 +58,34 @@ public sealed class ConnectionSettings
     }
 }
 
+public static class ConnectionStore
+{
+    private static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "QueryCare");
+    private static string FilePath => Path.Combine(Folder, "connections.json");
+    private static string LegacyFilePath => Path.Combine(Folder, "connection.json");
+
+    public static List<ConnectionSettings> Load()
+    {
+        try
+        {
+            if (File.Exists(FilePath))
+                return JsonSerializer.Deserialize<List<ConnectionSettings>>(File.ReadAllText(FilePath)) ?? new();
+            if (File.Exists(LegacyFilePath) && JsonSerializer.Deserialize<ConnectionSettings>(File.ReadAllText(LegacyFilePath)) is { } single
+                && !string.IsNullOrEmpty(single.Database))
+                return new() { single };
+        }
+        catch { }
+        return new();
+    }
+
+    public static void Save(IEnumerable<ConnectionSettings> connections)
+    {
+        try
+        {
+            Directory.CreateDirectory(Folder);
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(connections.ToList(), new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch { }
+    }
+}
+
