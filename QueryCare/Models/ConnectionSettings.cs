@@ -15,5 +15,21 @@ public sealed class ConnectionSettings
     public bool UseWindowsAuth { get; set; } = true;
     public string User { get; set; } = "";
     public bool TrustServerCertificate { get; set; } = true;
+
+    public string? ProtectedPassword { get; set; }
+
+    [JsonIgnore]
+    public string Password
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(ProtectedPassword)) return "";
+            try { return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(ProtectedPassword), null, DataProtectionScope.CurrentUser)); }
+            catch { return ""; }
+        }
+        set => ProtectedPassword = string.IsNullOrEmpty(value)
+            ? null
+            : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
+    }
 }
 
