@@ -91,6 +91,33 @@ public sealed class SqlMonitorService
             BlockerLogin = N(r, 14)
         }, ct);
     }
+    private Task<List<QueryStat>> GetProcedureStatsAsync(CancellationToken ct)
+    {
+        // Tiempos de las DMVs en microsegundos -> se convierten a ms.
+        const string sql = """
+            SELECT TOP (100)
+                   OBJECT_SCHEMA_NAME(ps.object_id, ps.database_id) + '.' + OBJECT_NAME(ps.object_id, ps.database_id) AS name,
+                   ps.execution_count,
+                   ps.total_elapsed_time / 1000.0 / ps.execution_count AS avg_ms,
+                   ps.max_elapsed_time / 1000.0 AS max_ms,
+                   ps.total_worker_time / 1000.0 AS cpu_ms,
+                   ps.total_logical_reads
+            FROM sys.dm_exec_procedure_stats ps
+            WHERE ps.database_id = DB_ID() AND ps.execution_count > 0
+            ORDER BY ps.total_elapsed_time / ps.execution_count DESC;
+            """;
+        return QueryAsync(sql, r => new QueryStat
+        {
+            IsProcedure = true,
+            Name = S(r, 0),
+            Text = "EXEC " + S(r, 0),
+            Executions = L(r, 1),
+            AvgMs = D(r, 2),
+            MaxMs = D(r, 3),
+            CpuTotalMs = D(r, 4),
+            LogicalReads = L(r, 5)
+        }, ct);
+    }
 
 }
 
