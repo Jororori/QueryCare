@@ -209,7 +209,7 @@ public sealed class SqlMonitorService
         while (await rd.ReadAsync(ct)) list.Add(map(rd));
         return list;
     }
-
+//Corrigiendo errores
     private static string S(SqlDataReader r, int i) => r.IsDBNull(i) ? "" : Convert.ToString(r.GetValue(i))!;
     private static string? N(SqlDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToString(r.GetValue(i));
     private static int I(SqlDataReader r, int i) => r.IsDBNull(i) ? 0 : Convert.ToInt32(r.GetValue(i));
