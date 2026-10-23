@@ -155,6 +155,48 @@ public sealed class SqlMonitorService
             };
         }, ct);
     }
+    private async Task<(int Procedures, int AdHoc)> GetCountsAsync(CancellationToken ct)
+    {
+        const string sql = """
+            SELECT (SELECT COUNT(*) FROM sys.dm_exec_procedure_stats WHERE database_id = DB_ID()),
+                   (SELECT COUNT(*)
+                    FROM sys.dm_exec_query_stats qs
+                    CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
+                    CROSS APPLY (SELECT CONVERT(int, value) AS dbid
+                                 FROM sys.dm_exec_plan_attributes(qs.plan_handle)
+                                 WHERE attribute = 'dbid') pa
+                    WHERE pa.dbid = DB_ID() AND st.objectid IS NULL
+                      AND st.text NOT LIKE '%/* QueryCare */%');
+            """;
+        var rows = await QueryAsync(sql, r => (I(r, 0), I(r, 1)), ct);
+        return rows[0];
+    }
+
+    private Task<List<MissingIndex>> GetMissingIndexesAsync(CancellationToken ct)
+    {
+        const string sql = """
+            SELECT TOP (50)
+                   OBJECT_SCHEMA_NAME(d.object_id, d.database_id) + '.' + OBJECT_NAME(d.object_id, d.database_id) AS tbl,
+                   d.equality_columns, d.inequality_columns, d.included_columns,
+                   gs.user_seeks, gs.user_scans, gs.avg_total_user_cost, gs.avg_user_impact
+            FROM sys.dm_db_missing_index_details d
+            JOIN sys.dm_db_missing_index_groups g ON d.index_handle = g.index_handle
+            JOIN sys.dm_db_missing_index_group_stats gs ON g.index_group_handle = gs.group_handle
+            WHERE d.database_id = DB_ID()
+            ORDER BY gs.user_seeks * gs.avg_total_user_cost * (gs.avg_user_impact / 100.0) DESC;
+            """;
+        return QueryAsync(sql, r => new MissingIndex
+        {
+            Table = S(r, 0),
+            EqualityColumns = N(r, 1),
+            InequalityColumns = N(r, 2),
+            IncludedColumns = N(r, 3),
+            Seeks = L(r, 4),
+            Scans = L(r, 5),
+            AvgCost = D(r, 6),
+            Impact = D(r, 7)
+        }, ct);
+    }
 
 }
 
