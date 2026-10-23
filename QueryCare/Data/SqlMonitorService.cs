@@ -197,6 +197,23 @@ public sealed class SqlMonitorService
             Impact = D(r, 7)
         }, ct);
     }
+    private async Task<List<T>> QueryAsync<T>(string sql, Func<SqlDataReader, T> map, CancellationToken ct)
+    {
+        var list = new List<T>();
+        await using var cn = new SqlConnection(_connectionString);
+        await cn.OpenAsync(ct);
+        await using var cmd = cn.CreateCommand();
+        cmd.CommandText = Preamble + sql;
+        cmd.CommandTimeout = 30;
+        await using var rd = await cmd.ExecuteReaderAsync(ct);
+        while (await rd.ReadAsync(ct)) list.Add(map(rd));
+        return list;
+    }
 
+    private static string S(SqlDataReader r, int i) => r.IsDBNull(i) ? "" : Convert.ToString(r.GetValue(i))!;
+    private static string? N(SqlDataReader r, int i) => r.IsDBNull(i) ? null : Convert.ToString(r.GetValue(i));
+    private static int I(SqlDataReader r, int i) => r.IsDBNull(i) ? 0 : Convert.ToInt32(r.GetValue(i));
+    private static long L(SqlDataReader r, int i) => r.IsDBNull(i) ? 0 : Convert.ToInt64(r.GetValue(i));
+    private static double D(SqlDataReader r, int i) => r.IsDBNull(i) ? 0 : Convert.ToDouble(r.GetValue(i));
 }
 
