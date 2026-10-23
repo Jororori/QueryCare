@@ -60,4 +60,23 @@ public sealed class PieChart : FrameworkElement
         }
     }
 
+    private static Geometry Slice(Point c, double r, double start, double sweep)
+    {
+        var g = new StreamGeometry();
+        using (var ctx = g.Open())
+        {
+            ctx.BeginFigure(c, true, true);
+            ctx.LineTo(OnCircle(c, r, start), true, true);
+            ctx.ArcTo(OnCircle(c, r, start + sweep), new Size(r, r), 0, sweep > 180, SweepDirection.Clockwise, true, true);
+        }
+        g.Freeze();
+        return g;
+    }
+
+    private static Point OnCircle(Point c, double r, double deg)
+    {
+        double rad = deg * Math.PI / 180;
+        return new Point(c.X + r * Math.Cos(rad), c.Y + r * Math.Sin(rad));
+    }
+
 }
