@@ -6,7 +6,777 @@
         xmlns:local="clr-namespace:QueryCare"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Window.Resources>
+        <!-- Insignia de estado/nivel coloreada -->
+        <DataTemplate x:Key="LevelBadge">
+            <Border CornerRadius="11" Padding="10,3" HorizontalAlignment="Left"
+                    Background="{Binding Converter={StaticResource LevelBrush}, ConverterParameter=bg}">
+                <TextBlock Text="{Binding}" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{Binding Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+            </Border>
+        </DataTemplate>
 
+        <!-- Chip de tipo de espera -->
+        <DataTemplate x:Key="WaitChip">
+            <Border CornerRadius="4" Padding="7,3" HorizontalAlignment="Left" Background="{StaticResource WaitChipBg}">
+                <TextBlock Text="{Binding}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="{StaticResource WaitChipFg}"/>
+            </Border>
+        </DataTemplate>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ================= Barra lateral ================= -->
+        <Grid Background="{StaticResource SidebarBg}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" Margin="26,30,20,34">
+                <Border Width="46" Height="46" CornerRadius="10" Background="{StaticResource Accent}">
+                    <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" FontSize="22" Foreground="White" HorizontalAlignment="Center"/>
+                </Border>
+                <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="QueryCare" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                    <TextBlock Text="SQL MONITOR" Foreground="{StaticResource SidebarText}" FontSize="11" FontWeight="SemiBold"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="ANÁLISIS" Foreground="{StaticResource SidebarMuted}" FontSize="11" FontWeight="SemiBold" Margin="30,0,0,10"/>
+
+                <RadioButton x:Name="NavSummary" Style="{StaticResource NavItem}" Tag="Summary" Checked="Nav_Checked" IsChecked="True">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" FontSize="17"/>
+                        <TextBlock Grid.Column="1" Text="Resumen" VerticalAlignment="Center"/>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavItem}" Tag="Queries" Checked="Nav_Checked">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE80A;" FontSize="17"/>
+                        <TextBlock Grid.Column="1" Text="Consultas y procedimientos" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavItem}" Tag="Processes" Checked="Nav_Checked">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE916;" FontSize="17"/>
+                        <TextBlock Grid.Column="1" Text="Procesos activos" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Style="{StaticResource NavBadge}" Visibility="{Binding ProcessIssues, Converter={StaticResource CountVis}}">
+                            <TextBlock Text="{Binding ProcessIssues}" Foreground="White" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavItem}" Tag="Indexes" Checked="Nav_Checked">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" FontSize="17"/>
+                        <TextBlock Grid.Column="1" Text="Índices faltantes" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Style="{StaticResource NavBadge}" Visibility="{Binding MissingIndexCount, Converter={StaticResource CountVis}}">
+                            <TextBlock Text="{Binding MissingIndexCount}" Foreground="White" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </RadioButton>
+                <RadioButton Style="{StaticResource NavItem}" Tag="Blocks" Checked="Nav_Checked">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Icon}" Text="&#xE72E;" FontSize="17"/>
+                        <TextBlock Grid.Column="1" Text="Bloqueos" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Style="{StaticResource NavBadge}" Visibility="{Binding BlockedCount, Converter={StaticResource CountVis}}">
+                            <TextBlock Text="{Binding BlockedCount}" Foreground="White" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </RadioButton>
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Margin="14,0,14,18">
+                <Grid Margin="16,0,4,8">
+                    <TextBlock Text="BASES DE DATOS" Foreground="{StaticResource SidebarMuted}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button HorizontalAlignment="Right" Cursor="Hand" Click="AddDatabase_Click" ToolTip="Agregar base de datos">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bd" Background="Transparent" CornerRadius="6" Padding="8,4">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bd" Property="Background" Value="{StaticResource SidebarHover}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" Foreground="{StaticResource AccentLight}" FontSize="11"/>
+                            <TextBlock Text="Agregar" Foreground="{StaticResource AccentLight}" FontSize="12" FontWeight="SemiBold" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="DatabaseList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Cursor="Hand" Click="SelectDatabase_Click" Margin="0,0,0,6" ToolTip="{Binding StatusText}">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="bd" Background="#18233B" BorderBrush="#26324D" BorderThickness="1" CornerRadius="10" Padding="12,10">
+                                                <ContentPresenter/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="#1E2A46"/>
+                                                </Trigger>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter TargetName="bd" Property="Background" Value="{StaticResource SidebarActive}"/>
+                                                    <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource AccentLight}"/>
+                                                </DataTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="34" Height="34" CornerRadius="8" Background="#26324D">
+                                            <TextBlock Style="{StaticResource Icon}" Text="&#xE8F1;" Foreground="{StaticResource SidebarText}" FontSize="14" HorizontalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding DatabaseName}" Foreground="White" FontWeight="SemiBold" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                                                <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                         Fill="{Binding StatusLevel, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                                <TextBlock Text="{Binding ServerName}" Foreground="{StaticResource SidebarText}" FontSize="11" Margin="6,0,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <Border Grid.Column="2" Style="{StaticResource NavBadge}" Height="20" MinWidth="20" Margin="0,0,4,0"
+                                                Visibility="{Binding StatusCount, Converter={StaticResource CountVis}}"
+                                                Background="{Binding StatusLevel, Converter={StaticResource LevelBrush}, ConverterParameter=fg}">
+                                            <TextBlock Text="{Binding StatusCount}" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <Button Grid.Column="3" Cursor="Hand" Click="RemoveDatabase_Click" ToolTip="Dejar de supervisar" VerticalAlignment="Center">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border x:Name="x" Background="Transparent" CornerRadius="4" Padding="4">
+                                                        <TextBlock Style="{StaticResource Icon}" Text="&#xE711;" FontSize="10" Foreground="{StaticResource SidebarMuted}"/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="x" Property="Background" Value="#3A2533"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================= Contenido ================= -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Encabezado -->
+            <Border Background="White" BorderBrush="{StaticResource CardBorder}" BorderThickness="0,0,0,1" Padding="40,26,24,22">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock x:Name="PageTitleText" Text="Resumen" Style="{StaticResource PageTitle}"/>
+                        <TextBlock x:Name="PageSubtitleText" Text="Alertas prioritarias" Style="{StaticResource Secondary}" FontSize="15" Margin="0,6,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="{StaticResource ChipBg}" BorderBrush="{StaticResource CardBorder}" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE8F1;" FontSize="13" Foreground="{StaticResource TextSecondary}"/>
+                                <TextBlock Text="{Binding DatabaseName}" FontWeight="SemiBold" FontSize="13" Margin="8,0,0,0" Foreground="{StaticResource TextPrimary}"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Small}" FontSize="13" VerticalAlignment="Center" Margin="14,0,18,0"/>
+                        <Button Style="{StaticResource OutlineButton}" Click="Refresh_Click" x:Name="RefreshButton">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE72C;" FontSize="14"/>
+                                <TextBlock x:Name="RefreshText" Text="Actualizar datos" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Errores de lectura -->
+            <Border Grid.Row="1" Background="#FDECEE" Padding="40,12" Visibility="{Binding HasErrors, Converter={StaticResource BoolVis}}">
+                <TextBlock Text="{Binding ErrorText}" Foreground="{StaticResource Danger}" TextWrapping="Wrap" FontSize="13"/>
+            </Border>
+
+            <!-- ============ Resumen ============ -->
+            <ScrollViewer x:Name="PageSummary" Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="40,30,40,30">
+                    <!-- Tarjetas de indicadores -->
+                    <UniformGrid Columns="4" Margin="-9,0,-9,0">
+                        <UniformGrid.Resources>
+                            <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                <Setter Property="Margin" Value="9,0"/>
+                                <Setter Property="Padding" Value="22,26"/>
+                                <Setter Property="ClipToBounds" Value="True"/>
+                            </Style>
+                        </UniformGrid.Resources>
+                        <Border>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="52" Height="52" CornerRadius="10" Background="#FDECEE" Margin="0,0,18,0" Padding="0" VerticalAlignment="Top">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE7BA;" FontSize="20" Foreground="{StaticResource Danger}" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="Alertas activas" Style="{StaticResource Secondary}" FontSize="14"/>
+                                    <TextBlock Text="{Binding AlertCount}" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding AlertsSubtitle}" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="52" Height="52" CornerRadius="10" Background="#EAF0FE" Margin="0,0,18,0" Padding="0" VerticalAlignment="Top">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" FontSize="20" Foreground="{StaticResource Accent}" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="Procesos activos" Style="{StaticResource Secondary}" FontSize="14"/>
+                                    <TextBlock Text="{Binding Processes.Count}" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding ProcessesSubtitle}" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="52" Height="52" CornerRadius="10" Background="#F2EEFB" Margin="0,0,18,0" Padding="0" VerticalAlignment="Top">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE72E;" FontSize="20" Foreground="{StaticResource WaitChipFg}" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="Sesiones bloqueadas" Style="{StaticResource Secondary}" FontSize="14"/>
+                                    <TextBlock Text="{Binding BlockedCount}" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding BlockedSubtitle}" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="52" Height="52" CornerRadius="10" Background="#FEF4E4" Margin="0,0,18,0" Padding="0" VerticalAlignment="Top">
+                                    <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" FontSize="20" Foreground="#C47A12" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel>
+                                    <TextBlock Text="Índices sugeridos" Style="{StaticResource Secondary}" FontSize="14"/>
+                                    <TextBlock Text="{Binding MissingIndexCount}" FontSize="30" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+                                    <TextBlock Text="{Binding IndexesSubtitle}" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Gráficos de estado -->
+                    <UniformGrid Columns="2" Margin="-9,18,-9,0">
+                        <Border Style="{StaticResource Card}" Margin="9,0" Padding="24,22">
+                            <StackPanel>
+                                <Grid>
+                                    <StackPanel>
+                                        <TextBlock Text="Procedimientos" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="En ejecución ahora e historial de rendimiento" Style="{StaticResource Secondary}" Margin="0,6,0,0"/>
+                                    </StackPanel>
+                                    <Border Style="{StaticResource Chip}" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="11">
+                                        <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}">
+                                            <Run Text="{Binding ProcTotal, Mode=OneWay}"/><Run Text=" en total"/>
+                                        </TextBlock>
+                                    </Border>
+                                </Grid>
+                                <Grid Margin="0,20,0,10" HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <controls:PieChart Width="156" Height="156" Good="{Binding ProcGood}" Slow="{Binding ProcSlow}" Frozen="{Binding ProcFrozen}"/>
+                                    <Grid Grid.Column="1" Margin="70,0,0,0" VerticalAlignment="Center" Width="180">
+                                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition Height="36"/></Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Ellipse Width="11" Height="11" Fill="#22A876"/>
+                                        <TextBlock Grid.Column="1" Text="Bien" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding ProcGood}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Ellipse Grid.Row="1" Width="11" Height="11" Fill="#E3A238"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="Lentos" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding ProcSlow}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Ellipse Grid.Row="2" Width="11" Height="11" Fill="#DF525E"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="Congelados" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ProcFrozen}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Margin="9,0" Padding="24,22">
+                            <StackPanel>
+                                <Grid>
+                                    <StackPanel>
+                                        <TextBlock Text="Consultas" Style="{StaticResource CardTitle}"/>
+                                        <TextBlock Text="En ejecución ahora e historial de rendimiento" Style="{StaticResource Secondary}" Margin="0,6,0,0"/>
+                                    </StackPanel>
+                                    <Border Style="{StaticResource Chip}" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="11">
+                                        <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}">
+                                            <Run Text="{Binding AdHocTotal, Mode=OneWay}"/><Run Text=" en total"/>
+                                        </TextBlock>
+                                    </Border>
+                                </Grid>
+                                <Grid Margin="0,20,0,10" HorizontalAlignment="Center">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <controls:PieChart Width="156" Height="156" Good="{Binding AdHocGood}" Slow="{Binding AdHocSlow}" Frozen="{Binding AdHocFrozen}"/>
+                                    <Grid Grid.Column="1" Margin="70,0,0,0" VerticalAlignment="Center" Width="180">
+                                        <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition Height="36"/></Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <Ellipse Width="11" Height="11" Fill="#22A876"/>
+                                        <TextBlock Grid.Column="1" Text="Bien" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding AdHocGood}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Ellipse Grid.Row="1" Width="11" Height="11" Fill="#E3A238"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="Lentos" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding AdHocSlow}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <Ellipse Grid.Row="2" Width="11" Height="11" Fill="#DF525E"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="Congelados" Style="{StaticResource Secondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding AdHocFrozen}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Centro de alertas -->
+                    <Border Style="{StaticResource Card}" Margin="0,18,0,0" Padding="26,24">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="CENTRO DE ALERTAS" Foreground="{StaticResource Danger}" FontSize="11" FontWeight="Bold"/>
+                                <TextBlock Text="Requieren tu atención" FontSize="22" Foreground="{StaticResource TextPrimary}" Margin="0,10,0,10"/>
+                                <TextBlock Text="Incidentes ordenados por prioridad para ayudarte a actuar primero en lo importante." Style="{StaticResource Secondary}" FontSize="14"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" BorderBrush="{StaticResource CardBorder}" BorderThickness="1,0,0,0" Padding="60,0,0,0">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding AlertCount}" FontSize="32" FontWeight="SemiBold" Foreground="{StaticResource Danger}" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="alertas activas" Style="{StaticResource Small}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Margin="0,18,0,0" Padding="26,22" Visibility="{Binding HasNoAlerts, Converter={StaticResource BoolVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE73E;" Foreground="#178A5E" FontSize="18"/>
+                            <TextBlock Text="Todo en orden: no hay procesos congelados, lentos ni bloqueos en este momento." Style="{StaticResource Secondary}" FontSize="14" Margin="12,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ItemsControl ItemsSource="{Binding Alerts}" Margin="-9,18,-9,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Columns="2" VerticalAlignment="Top"/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Card}" Margin="9,0,9,18" BorderThickness="4,1,1,1"
+                                        BorderBrush="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=fg}">
+                                    <Grid Margin="20,20,20,20">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Border Width="48" Height="48" CornerRadius="10" VerticalAlignment="Top"
+                                                Background="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=bg}">
+                                            <TextBlock Style="{StaticResource Icon}" Text="{Binding Glyph}" FontSize="19" HorizontalAlignment="Center"
+                                                       Foreground="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <Grid>
+                                                <TextBlock Text="{Binding Severity}" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
+                                                           Foreground="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                                <Border HorizontalAlignment="Right" CornerRadius="10" Padding="9,3"
+                                                        Background="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=bg}">
+                                                    <TextBlock Text="Activa" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{Binding Severity, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="{Binding Title}" FontSize="16" Foreground="{StaticResource TextPrimary}" Margin="0,8,0,6" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding Description}" Style="{StaticResource Secondary}"/>
+                                            <ItemsControl ItemsSource="{Binding Tags}" Margin="0,12,0,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Style="{StaticResource Chip}" Margin="0,0,8,6">
+                                                            <TextBlock Text="{Binding}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}"/>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============ Consultas y procedimientos ============ -->
+            <Grid x:Name="PageQueries" Grid.Row="2" Margin="40,30,40,24" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <UniformGrid Columns="3" Margin="-9,0,-9,18">
+                    <Border Style="{StaticResource Card}" Margin="9,0" Padding="22,20">
+                        <StackPanel>
+                            <TextBlock Text="Consultas analizadas" Style="{StaticResource Secondary}" FontSize="12"/>
+                            <TextBlock Text="{Binding AdHocAnalyzed, StringFormat=N0}" FontSize="26" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="9,0" Padding="22,20">
+                        <StackPanel>
+                            <TextBlock Text="Procedimientos analizados" Style="{StaticResource Secondary}" FontSize="12"/>
+                            <TextBlock Text="{Binding ProceduresAnalyzed, StringFormat=N0}" FontSize="26" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="9,0" Padding="22,20">
+                        <StackPanel>
+                            <TextBlock Text="Con tiempo elevado (promedio ≥ 10 s)" Style="{StaticResource Secondary}" FontSize="12"/>
+                            <TextBlock Text="{Binding HighTimeCount}" FontSize="26" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid Margin="24,22,24,20">
+                            <StackPanel>
+                                <TextBlock Text="Rendimiento de consultas y procedimientos" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Text="Ordenados por duración promedio, de mayor a menor" Style="{StaticResource Secondary}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <Grid HorizontalAlignment="Right" Width="320">
+                                <TextBox Text="{Binding QueryFilter, UpdateSourceTrigger=PropertyChanged}" Padding="36,9,10,9"/>
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" Foreground="{StaticResource TextMuted}" Margin="13,0,0,0" IsHitTestVisible="False"/>
+                            </Grid>
+                        </Grid>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredQueryStats}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="NOMBRE" Width="3*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel ToolTip="{Binding Text}">
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Snippet}" Style="{StaticResource Small}" FontSize="11" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="TIPO" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Chip}">
+                                                <TextBlock Text="{Binding TypeLabel}" FontSize="11" FontWeight="SemiBold" Foreground="#3C4A66"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="TIEMPO PROM." Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding AvgText}" FontWeight="SemiBold" ToolTip="{Binding Details}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="EJECUCIONES" Width="*" Binding="{Binding Executions, StringFormat=N0}"/>
+                                <DataGridTextColumn Header="LECTURAS LÓGICAS" Width="*" Binding="{Binding LogicalReads, StringFormat=N0}"/>
+                                <DataGridTemplateColumn Header="NIVEL" Width="0.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ContentControl Content="{Binding Level}" ContentTemplate="{StaticResource LevelBadge}" Focusable="False"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Grid.Row="2" Text="{Binding QueryFooter}" Style="{StaticResource Small}" Margin="24,16"/>
+                    </Grid>
+                </Border>
+                
+            </Grid>
+
+            <!-- ============ Procesos activos ============ -->
+            <Grid x:Name="PageProcesses" Grid.Row="2" Margin="40,30,40,24" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Style="{StaticResource Card}" Padding="22,18" Margin="0,0,0,18">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="9" Height="9" Fill="#DF525E" VerticalAlignment="Center"/>
+                        <TextBlock Margin="8,0,28,0" Foreground="{StaticResource TextPrimary}"><Run Text="{Binding FrozenCount, Mode=OneWay}"/><Run Text=" congelado(s)"/></TextBlock>
+                        <Ellipse Width="9" Height="9" Fill="#E3A238" VerticalAlignment="Center"/>
+                        <TextBlock Margin="8,0,28,0" Foreground="{StaticResource TextPrimary}"><Run Text="{Binding SlowCount, Mode=OneWay}"/><Run Text=" cargando demasiado"/></TextBlock>
+                        <Ellipse Width="9" Height="9" Fill="#22A876" VerticalAlignment="Center"/>
+                        <TextBlock Margin="8,0,0,0" Foreground="{StaticResource TextPrimary}"><Run Text="{Binding GoodCount, Mode=OneWay}"/><Run Text=" ejecutando normalmente"/></TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid Margin="24,22,24,20">
+                            <StackPanel>
+                                <TextBlock Text="Procesos en ejecución" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0"><Run Text="Estado actual de las solicitudes activas en "/><Run Text="{Binding DatabaseName, Mode=OneWay}"/></TextBlock>
+                            </StackPanel>
+                            <Grid HorizontalAlignment="Right" Width="320">
+                                <TextBox Text="{Binding ProcessFilter, UpdateSourceTrigger=PropertyChanged}" Padding="36,9,10,9"/>
+                                <TextBlock Style="{StaticResource Icon}" Text="&#xE721;" Foreground="{StaticResource TextMuted}" Margin="13,0,0,0" IsHitTestVisible="False"/>
+                            </Grid>
+                        </Grid>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredProcesses}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="SESIÓN" Width="0.6*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding SessionText}" FontWeight="SemiBold"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="PROCESO" Width="2.6*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel ToolTip="{Binding Statement}">
+                                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Snippet}" Style="{StaticResource Small}" FontSize="11" Margin="0,5,0,0" TextTrimming="CharacterEllipsis"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="USUARIO" Width="*" Binding="{Binding Login}"/>
+                                <DataGridTemplateColumn Header="TIEMPO ACTIVO" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding ElapsedText}" FontWeight="SemiBold" ToolTip="{Binding Details}"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="TIPO DE ESPERA" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><ContentControl Content="{Binding WaitTypeText}" ContentTemplate="{StaticResource WaitChip}" Focusable="False"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="ESTADO" Width="1.2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="11" Padding="10,4" HorizontalAlignment="Left"
+                                                    Background="{Binding Level, Converter={StaticResource LevelBrush}, ConverterParameter=bg}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                                             Fill="{Binding Level, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                                    <TextBlock Text="{Binding StateLabel}" FontSize="12" FontWeight="SemiBold" Margin="7,0,0,0"
+                                                               Foreground="{Binding Level, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource GridRow}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Level}" Value="Congelado">
+                                            <Setter Property="Background" Value="#FFF6F7"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGrid.RowStyle>
+                        </DataGrid>
+                        <TextBlock Grid.Row="2" Style="{StaticResource Small}" Margin="24,16"
+                                   Text="Fotografía actual del servidor · actualización automática cada 15 s · congelado = bloqueado ≥ 1 min o esperando el mismo recurso ≥ 5 min · lento = ≥ 30 s"/>
+                    </Grid>
+                </Border>
+                
+            </Grid>
+
+            <!-- ============ Índices faltantes ============ -->
+            <Grid x:Name="PageIndexes" Grid.Row="2" Margin="40,30,40,24" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Background="#FFF9EF" BorderBrush="#F6DFB4" BorderThickness="1" CornerRadius="12" Padding="22,20" Margin="0,0,0,18">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="50" Height="50" CornerRadius="10" Background="#FEF0D6">
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE945;" FontSize="20" Foreground="#C47A12" HorizontalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding IndexesBanner}" FontWeight="SemiBold" FontSize="14" Foreground="#5A3D0A"/>
+                            <TextBlock Text="Son recomendaciones de SQL Server." Style="{StaticResource Secondary}" FontSize="12" Foreground="#8A6A2E" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid Margin="24,22,24,20">
+                            <StackPanel>
+                                <TextBlock Text="Índices faltantes" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Style="{StaticResource Secondary}" Margin="0,6,0,0"><Run Text="Priorizados según su beneficio estimado para "/><Run Text="{Binding DatabaseName, Mode=OneWay}"/></TextBlock>
+                            </StackPanel>
+                        </Grid>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding MissingIndexes}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="TABLA" Width="1.6*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" ToolTip="{Binding Tooltip}">
+                                                <TextBlock Style="{StaticResource Icon}" Text="&#xE80A;" Foreground="{StaticResource TextSecondary}" FontSize="14"/>
+                                                <TextBlock Text="{Binding Table}" FontWeight="SemiBold" Margin="10,0,0,0"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="COLUMNAS CLAVE" Width="1.4*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="7,3" HorizontalAlignment="Left" Background="#EEF2FB" ToolTip="{Binding KeyColumns}">
+                                                <TextBlock Text="{Binding KeyColumns}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="#3C4A66" TextTrimming="CharacterEllipsis"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="COLUMNAS INCLUIDAS" Width="1.4*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="4" Padding="7,3" HorizontalAlignment="Left" Background="{StaticResource ChipBg}" ToolTip="{Binding IncludedText}">
+                                                <TextBlock Text="{Binding IncludedText}" FontFamily="{StaticResource MonoFont}" FontSize="11" Foreground="{StaticResource TextSecondary}" TextTrimming="CharacterEllipsis"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="USOS POTENCIALES" Width="*" Binding="{Binding PotentialUses, StringFormat=N0}"/>
+                                <DataGridTemplateColumn Header="IMPACTO EST." Width="0.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="11" Padding="10,3" HorizontalAlignment="Left"
+                                                    Background="{Binding Level, Converter={StaticResource LevelBrush}, ConverterParameter=bg}">
+                                                <TextBlock Text="{Binding ImpactText}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{Binding Level, Converter={StaticResource LevelBrush}, ConverterParameter=fg}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Grid.Row="2" Text="Datos acumulados desde el último reinicio de SQL Server" Style="{StaticResource Small}" Margin="24,16"/>
+                    </Grid>
+                </Border>
+                
+            </Grid>
+
+            <!-- ============ Bloqueos ============ -->
+            <Grid x:Name="PageBlocks" Grid.Row="2" Margin="40,30,40,24" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Style="{StaticResource Card}" Padding="24,26" Margin="0,0,0,18">
+                    <Grid>
+                        <TextBlock Text="No hay cadenas de bloqueo activas." Style="{StaticResource Secondary}" HorizontalAlignment="Center"
+                                   Visibility="{Binding BlockedCount, Converter={StaticResource CountVis}, ConverterParameter=invert}"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="260" HorizontalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Chains}" HorizontalAlignment="Center">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding Nodes}" Margin="0,4">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="— › —" Foreground="{StaticResource TextMuted}" FontSize="16" VerticalAlignment="Center" Margin="10,0"
+                                                                   Visibility="{Binding ShowArrow, Converter={StaticResource BoolVis}}"/>
+                                                        <Border x:Name="node" Width="236" CornerRadius="6" Padding="16,14" BorderThickness="1"
+                                                                Background="#FDECEE" BorderBrush="#F4C3C8">
+                                                            <StackPanel>
+                                                                <TextBlock x:Name="t1" Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="#A8323D"/>
+                                                                <TextBlock x:Name="t2" Text="{Binding Subtitle}" FontSize="13" FontWeight="SemiBold" Foreground="#A8323D" Margin="0,6,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <DataTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding IsHead}" Value="True">
+                                                            <Setter TargetName="node" Property="Background" Value="#FEF4E4"/>
+                                                            <Setter TargetName="node" Property="BorderBrush" Value="#F2D7A6"/>
+                                                            <Setter TargetName="t1" Property="Foreground" Value="#7A4E0B"/>
+                                                            <Setter TargetName="t2" Property="Foreground" Value="#7A4E0B"/>
+                                                        </DataTrigger>
+                                                    </DataTemplate.Triggers>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <Grid Margin="24,22,24,20">
+                            <StackPanel>
+                                <TextBlock Text="Detalle de bloqueos" Style="{StaticResource CardTitle}"/>
+                                <TextBlock Text="Relación entre sesiones bloqueadas y sesiones responsables" Style="{StaticResource Secondary}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="11" Padding="10,4" Background="#FDECEE">
+                                <TextBlock Text="{Binding BlockedBadge}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Danger}"/>
+                            </Border>
+                        </Grid>
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding BlockedProcesses}">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="SESIÓN BLOQUEADA" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="5" Padding="9,4" Background="#FDECEE" HorizontalAlignment="Left" ToolTip="{Binding Statement}">
+                                                <TextBlock Text="{Binding SessionText}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Danger}"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="BLOQUEADA POR" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding BlockingText}" FontWeight="SemiBold"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="OBJETO AFECTADO" Width="1.3*" Binding="{Binding BlockedObjectText}"/>
+                                <DataGridTemplateColumn Header="TIEMPO DE ESPERA" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><TextBlock Text="{Binding WaitText}" FontWeight="SemiBold"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="TIPO DE ESPERA" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate><ContentControl Content="{Binding WaitTypeText}" ContentTemplate="{StaticResource WaitChip}" Focusable="False"/></DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="RESPONSABLE" Width="*" Binding="{Binding BlockerLoginText}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+                
+            </Grid>
+        </Grid>
     </Grid>
 </Window>
