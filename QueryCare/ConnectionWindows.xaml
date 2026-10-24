@@ -1,12 +1,47 @@
-﻿<Window x:Class="QueryCare.ConnectionWindows"
+﻿<Window x:Class="QueryCare.ConnectionWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:QueryCare"
-        mc:Ignorable="d"
-        Title="ConnectionWindows" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="QueryCare · Conectar" Width="460" SizeToContent="Height"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
+        Background="{StaticResource PageBg}" FontFamily="Segoe UI">
+    <StackPanel Margin="28">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
+            <Border Width="44" Height="44" CornerRadius="10" Background="{StaticResource Accent}">
+                <TextBlock Style="{StaticResource Icon}" Text="&#xE9D9;" FontSize="20" Foreground="White" HorizontalAlignment="Center"/>
+            </Border>
+            <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock Text="Conectar a la base de datos" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"/>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Text="Servidor" Style="{StaticResource Secondary}" Margin="0,0,0,4"/>
+        <TextBox x:Name="ServerBox" Margin="0,0,0,12"/>
+
+        <TextBlock Text="Base de datos" Style="{StaticResource Secondary}" Margin="0,0,0,4"/>
+        <TextBox x:Name="DatabaseBox" Margin="0,0,0,12"/>
+
+        <TextBlock Text="Autenticación" Style="{StaticResource Secondary}" Margin="0,0,0,6"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+            <RadioButton x:Name="WindowsAuth" Content="Windows" GroupName="Auth" Margin="0,0,20,0" Checked="Auth_Changed"/>
+            <RadioButton x:Name="SqlAuth" Content="SQL Server" GroupName="Auth" Checked="Auth_Changed"/>
+        </StackPanel>
+
+        <StackPanel x:Name="SqlCredentials">
+            <TextBlock Text="Usuario" Style="{StaticResource Secondary}" Margin="0,0,0,4"/>
+            <TextBox x:Name="UserBox" Margin="0,0,0,12"/>
+            <TextBlock Text="Contraseña" Style="{StaticResource Secondary}" Margin="0,0,0,4"/>
+            <PasswordBox x:Name="PasswordBox" Margin="0,0,0,12"/>
+        </StackPanel>
+
+        <CheckBox x:Name="TrustCert" Content="Confiar en el certificado del servidor" Margin="0,0,0,16" Foreground="{StaticResource TextSecondary}"/>
+
+        <Border x:Name="ErrorPanel" Background="#FDECEE" CornerRadius="8" Padding="12,10" Margin="0,0,0,16" Visibility="Collapsed">
+            <TextBlock x:Name="ErrorText" Foreground="{StaticResource Danger}" TextWrapping="Wrap" FontSize="12"/>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancelar" Style="{StaticResource OutlineButton}" Margin="0,0,10,0" IsCancel="True"/>
+            <Button x:Name="ConnectButton" Content="Conectar" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="Connect_Click"/>
+        </StackPanel>
+    </StackPanel>
 </Window>
