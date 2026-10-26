@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
