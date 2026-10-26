@@ -1,16 +1,29 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using QueryCare.Models;
 using QueryCare.ViewModels;
 
+
 namespace QueryCare;
 
-public partial class MainWindow : Window
-{
-    /// <summary>Una entrada por cada base de datos supervisada; todas se actualizan en segundo plano.</summary>
-    private readonly ObservableCollection<MainViewModel> _databases = new();
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        private readonly ObservableCollection<MainViewModel> _databases = new();
     private MainViewModel? _selected;
     private string _currentPage = "Summary";
 
@@ -129,4 +142,4 @@ public partial class MainWindow : Window
     }
 
     private void SaveConnections() => ConnectionStore.Save(_databases.Select(d => d.Settings));
-}
+    }
